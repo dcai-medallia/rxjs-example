@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en" ng-app="app">
+  <head>
+    <meta charset="utf-8">
+    <meta name="description" content="RxJS example">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>RxJS Example</title>
+    <link rel="stylesheet" href="app.css">
+    <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Open+Sans:400,300,600">
+  </head>
+
+  <body ng-controller="AppController">
+
+    <div class="button-bar">
+      <input type="text" name="keyword" ng-model="keyword">{{keyword}}
+      <button id="btn-create" class="btn btn-primary">New card</button>
+    </div>
+
+    <script src="node_modules/angular/angular.js"></script>
+    <script src="node_modules/rx/dist/rx.all.js"></script>
+    <script src="node_modules/rx-angular/dist/rx.angular.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
