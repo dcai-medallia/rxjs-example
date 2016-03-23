@@ -11,7 +11,7 @@ function AppController($scope, $log, $http, rx, observeOnScope) {
 
 
   observeOnScope($scope, 'keyword')
-    .throttle(1000)
+    .debounce(1000)
     .map(function(change){
       $log.log(change);
       return change.newValue || "";
