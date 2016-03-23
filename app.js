@@ -10,6 +10,7 @@ function AppController($scope, $log, $http, rx, observeOnScope) {
   $scope.results = [];
 
 
+  // Instead of using Angular's watch function, we use observeOnScope to create an observable stream
   observeOnScope($scope, 'keyword')
     .debounce(1000)
     .map(function(change){
@@ -25,6 +26,7 @@ function AppController($scope, $log, $http, rx, observeOnScope) {
     .subscribe();
 
 
+  // Create an observable function for DOM events
   $scope.$createObservableFunction('search')
     .map(function() { return $scope.keyword; })
     .flatMapLatest(searchWikipedia)
