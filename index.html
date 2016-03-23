@@ -5,8 +5,10 @@
     <meta name="description" content="RxJS example">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>RxJS Example</title>
+
     <link rel="stylesheet" href="app.css">
     <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Open+Sans:400,300,600">
+
     <script src="node_modules/angular/angular.js"></script>
     <script src="node_modules/rx/dist/rx.all.js"></script>
     <script src="node_modules/rx-angular/dist/rx.angular.js"></script>
@@ -16,10 +18,13 @@
   <body ng-controller="AppController">
 
     <div class="button-bar">
-      <input type="text" name="keyword" ng-model="keyword">
+      <input type="text" ng-model="keyword">
+      <button type="button" ng-click="search()">Search</button>
     </div>
+
     <ul class="result-list">
       <li ng-repeat="result in results"><a href="{{result.url}}">{{result.title}}</a></li>
     </ul>
+
   </body>
 </html>

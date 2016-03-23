@@ -4,39 +4,57 @@ angular
 ;
 
 
-function AppController($scope, $log, $http, observeOnScope) {
-  $log.log('AppController');
+function AppController($scope, $log, $http, rx, observeOnScope) {
+
+  $scope.keyword = '';
+  $scope.results = [];
+
 
   observeOnScope($scope, 'keyword')
     .throttle(1000)
     .map(function(change){
+      $log.log(change);
       return change.newValue || "";
     })
     .distinctUntilChanged() // Only if the value has changed
     .flatMapLatest(searchWikipedia)
-    .safeApply($scope, function(result) {
-      $log.log('render');
-      $scope.results = [];
-
-      for(var i = 0, ii = result.data[1].length; i < ii; i++){
-        $scope.results.push({
-          title: result.data[1][i],
-          url: result.data[3][i]
-        });
-      }
+    .safeApply($scope, function(results) {
+      $log.log(results);
+      $scope.results = results;
     })
     .subscribe();
 
-  function searchWikipedia(term) {
-    return Rx.Observable.fromPromise($http({
+
+  $scope.$createObservableFunction('search')
+    .map(function() { return $scope.keyword; })
+    .flatMapLatest(searchWikipedia)
+    .subscribe(function(results) {
+      $log.log(results);
+      $scope.results = results;
+    });
+
+
+  function searchWikipedia(keyword) {
+    return rx.Observable.fromPromise(
+      $http({
         url: "http://en.wikipedia.org/w/api.php?&callback=JSON_CALLBACK",
         method: "jsonp",
         params: {
           action: "opensearch",
-          search: encodeURI(term),
+          search: encodeURI(keyword),
           format: "json"
         }
       })
-    );
+    ).map(function(response) {
+      var results = [];
+      for (var i = 0, ii = response.data[1].length; i < ii; i++) {
+        results.push({
+          title: response.data[1][i],
+          url: response.data[3][i]
+        });
+      }
+
+      return results;
+    });
   }
 }
