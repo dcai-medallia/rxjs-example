@@ -12,7 +12,7 @@ function AppController($scope, $log, $http, rx, observeOnScope) {
 
   // Instead of using Angular's watch function, we use observeOnScope to create an observable stream
   observeOnScope($scope, 'keyword')
-    .debounce(1000)
+    .debounce(500)
     .map(function(change){
       $log.log(change);
       return change.newValue || "";
