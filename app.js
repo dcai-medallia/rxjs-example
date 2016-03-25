@@ -69,43 +69,17 @@ function AppController($scope, $log, $http, rx, observeOnScope) {
   // $http promises demo
   //
 
-  var postSource = rx.Observable.fromPromise($http.get('http://jsonplaceholder.typicode.com/posts/1'));
-  var commentSource = rx.Observable.fromPromise($http.get('http://jsonplaceholder.typicode.com/comments/1'));
+  function getStreamSource(url) {
+    return rx.Observable.just(url).
+      flatMap(function(url) { return $http.get(url); });
+  }
 
-  // 1. Zip example
-  // Sequential. Post goes before Comment, and requests don't depend on each other's response.
-  // var source = rx.Observable.zip(
-  //   postSource,
-  //   commentSource,
-  //   function(postRes, commentRes) {
-  //     return {
-  //       post: postRes.data,
-  //       comment: commentRes.data
-  //     };
-  //   }
-  // );
+  var POST_URL = 'http://jsonplaceholder.typicode.com/posts/1';
+  var COMMENT_URL = 'http://jsonplaceholder.typicode.com/comments/1';
+  var postSource = getStreamSource(POST_URL);
+  var commentSource = getStreamSource(COMMENT_URL);
 
-  // 2. And/Then/When example (Pattern and Plan)
-  // Sequential. Post goes before Comment, and requests don't depend on each other's response. Same as the Zip example.
-  // var source = rx.Observable.when(
-  //   postSource.and(commentSource).thenDo(function(postRes, commentRes) {
-  //     return {
-  //       post: postRes.data,
-  //       comment: commentRes.data
-  //     };
-  //   }
-  // ));
-
-  // 3. Sequential. Post goes before Comment, and Comment request depends on the response from Post.
-  var source = postSource
-    .flatMap(function(postRes) {
-      return $http.get('http://jsonplaceholder.typicode.com/comments/' + postRes.data.id);
-    })
-    .map(function(commentRes) {
-      return commentRes.data;
-    });
-
-  // 4. ForkJoin example
+  // 1. ForkJoin example
   // Parallel. Run both Post and Comment in parallel.
   // var source = rx.Observable.forkJoin(
   //   postSource,
@@ -118,10 +92,54 @@ function AppController($scope, $log, $http, rx, observeOnScope) {
   //   }
   // );
 
+  // 2. Zip example
+  // Sequential. Post runs before Comment. Requests don't depend on each other's response.
+  // var source = rx.Observable.zip(
+  //   postSource,
+  //   commentSource,
+  //   function(postRes, commentRes) {
+  //     return {
+  //       post: postRes.data,
+  //       comment: commentRes.data
+  //     };
+  //   }
+  // );
+
+  // 3. And/Then/When example (Pattern and Plan)
+  // Sequential. Post runs before Comment. Requests don't depend on each other's response.
+  // Same as the Zip example.
+  var source = rx.Observable.when(
+    postSource.and(commentSource).thenDo(function(postRes, commentRes) {
+      return {
+        post: postRes.data,
+        comment: commentRes.data
+      };
+    }
+  ));
+
+  // 4. Master-and-detail relationship
+  // Sequential. Comment request depends on the response from the Post request.
+  // var source = postSource
+  //   .flatMap(function(postRes) {
+  //     return rx.Observable.zip(
+  //       rx.Observable.of(postRes),
+  //       getStreamSource('http://jsonplaceholder.typicode.com/comments/' + postRes.data.id),
+  //       function(postRes, commentRes) {
+  //         return {
+  //           post: postRes.data,
+  //           comment: commentRes.data
+  //         };
+  //       }
+  //     );
+  //   }
+  // );
+
   $scope.$createObservableFunction('start')
+    .safeApply($scope, function() {
+      $scope.restResult = {};
+    })
     .flatMap(function() { return source; })
     .safeApply($scope, function(results) {
-      $log.log(results);
       $scope.restResult = results;
     })
     .subscribe();
