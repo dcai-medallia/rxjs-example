@@ -15,7 +15,8 @@ function AppController($scope, $log, $http, rx, observeOnScope) {
   $scope.results = [];
 
 
-  // Instead of using Angular's watch function, we use observeOnScope to create an observable stream
+  // Instead of using Angular's watch function,
+  // we use observeOnScope to create an observable stream.
   observeOnScope($scope, 'keyword')
     .debounce(500)
     .map(function(change){
@@ -71,7 +72,8 @@ function AppController($scope, $log, $http, rx, observeOnScope) {
   // Uncomment one of four examples to see the results
   //
 
-  // Return a stream wrapping a HTTP promise without invoking the actual HTTP request
+  // Return a stream wrapping a HTTP promise without
+  // invoking the actual HTTP request.
   function getStreamSource(url) {
     return rx.Observable.just(url).
       flatMap(function(url) { return $http.get(url); });
@@ -101,7 +103,8 @@ function AppController($scope, $log, $http, rx, observeOnScope) {
 
 
   // 2. Zip example
-  // Sequential: Post runs before Comment. Requests don't depend on each other's response.
+  // Sequential: Post runs before Comment.
+  // However, requests don't depend on each other's response.
 
   // var source = rx.Observable.zip(
   //   postSource,
@@ -118,7 +121,8 @@ function AppController($scope, $log, $http, rx, observeOnScope) {
 
 
   // 3. And/Then/When example (Pattern and Plan)
-  // Sequential: Post runs before Comment. Requests don't depend on each other's response.
+  // Sequential: Post runs before Comment.
+  // However, requests don't depend on each other's response.
   // Same as the Zip example.
 
   // var source = rx.Observable.when(
@@ -133,7 +137,7 @@ function AppController($scope, $log, $http, rx, observeOnScope) {
 
   // 4. Master-detail (Cascading) relationship example
   // Sequential: Comment request depends on the response from the Post request.
-  // Check browser's network console to see if Post responses precede Comment requests.
+  // Check network console to see if Post responses precede Comment requests.
 
   var source = postSource
     .flatMap(function(postRes) {
@@ -165,9 +169,12 @@ function AppController($scope, $log, $http, rx, observeOnScope) {
     .safeApply($scope, function(results) {
       $scope.restResult = results;
     })
-    // At this moment, no HTTP request is made until the subscribe function is called
+    // At this moment, no HTTP request is made until subscribe is called
     .subscribe();
 
-  // // Cancellation. No REST HTTP request will be sent.
+
+  // Uncomment the following line to cancel the subscription.
+  // No REST HTTP request will be sent.
+
   // subscription.dispose();
 }
