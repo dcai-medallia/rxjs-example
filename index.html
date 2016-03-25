@@ -14,8 +14,9 @@
 
   <body ng-controller="AppController">
 
+    <!-- Auto search demo -->
     <div class="button-bar">
-      <p>Search Wikipedia</p>
+      <p>Search Wikipedia demo</p>
       <input type="text" ng-model="keyword">
       <button type="button" ng-click="search()">Search</button>
     </div>
@@ -23,6 +24,13 @@
     <ul class="result-list">
       <li ng-repeat="result in results"><a href="{{result.url}}">{{result.title}}</a></li>
     </ul>
+
+    <!-- REST API demo -->
+    <div class="button-bar">
+      <p>REST API demo</p>
+      <button type="button" ng-click="start()">Start</button>
+    </div>
+    <pre>{{restResult | json}}</pre>
 
   </body>
 </html>
