@@ -85,8 +85,8 @@ function AppController($scope, $log, $http, rx, observeOnScope) {
   //   }
   // );
 
-  // 2. And/Then/When example
-  // Sequential. Post goes before Comment, and requests don't depend on each other's response.
+  // 2. And/Then/When example (Pattern and Plan)
+  // Sequential. Post goes before Comment, and requests don't depend on each other's response. Same as the Zip example.
   // var source = rx.Observable.when(
   //   postSource.and(commentSource).thenDo(function(postRes, commentRes) {
   //     return {
@@ -97,28 +97,26 @@ function AppController($scope, $log, $http, rx, observeOnScope) {
   // ));
 
   // 3. Sequential. Post goes before Comment, and Comment request depends on the response from Post.
-  // var source = postSource
-  //   .flatMap(function(postRes) {
-  //     $log.log(postRes.data);
-  //     return commentSource;
-  //   });
-  //   // .map(function(commentRes) {
-  //   //   $log.log(commentRes);
-  //   //   return commentRes;
-  //   // });
+  var source = postSource
+    .flatMap(function(postRes) {
+      return $http.get('http://jsonplaceholder.typicode.com/comments/' + postRes.data.id);
+    })
+    .map(function(commentRes) {
+      return commentRes.data;
+    });
 
   // 4. ForkJoin example
   // Parallel. Run both Post and Comment in parallel.
-  var source = rx.Observable.forkJoin(
-    postSource,
-    commentSource,
-    function(postRes, commentRes) {
-      return {
-        post: postRes.data,
-        comment: commentRes.data
-      }
-    }
-  );
+  // var source = rx.Observable.forkJoin(
+  //   postSource,
+  //   commentSource,
+  //   function(postRes, commentRes) {
+  //     return {
+  //       post: postRes.data,
+  //       comment: commentRes.data
+  //     }
+  //   }
+  // );
 
   $scope.$createObservableFunction('start')
     .flatMap(function() { return source; })
