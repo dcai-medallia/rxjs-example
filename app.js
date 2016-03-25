@@ -8,6 +8,7 @@ function AppController($scope, $log, $http, rx, observeOnScope) {
 
   //
   // Auto search demo
+  // Reduce the amount of REST calls by throttling user typings
   //
 
   $scope.keyword = '';
@@ -19,7 +20,7 @@ function AppController($scope, $log, $http, rx, observeOnScope) {
     .debounce(500)
     .map(function(change){
       $log.log(change);
-      return change.newValue || "";
+      return change.newValue || '';
     })
     .distinctUntilChanged() // Only if the value has changed
     .flatMapLatest(searchWikipedia)
@@ -67,8 +68,10 @@ function AppController($scope, $log, $http, rx, observeOnScope) {
 
   //
   // $http promises demo
+  // Uncomment one of four examples to see the results
   //
 
+  // Return a stream wrapping a HTTP promise without invoking the actual HTTP request
   function getStreamSource(url) {
     return rx.Observable.just(url).
       flatMap(function(url) { return $http.get(url); });
@@ -79,11 +82,15 @@ function AppController($scope, $log, $http, rx, observeOnScope) {
   var postSource = getStreamSource(POST_URL);
   var commentSource = getStreamSource(COMMENT_URL);
 
+
   // 1. ForkJoin example
-  // Parallel. Run both Post and Comment in parallel.
+  // Parallel: Run both Post and Comment in parallel.
+
   // var source = rx.Observable.forkJoin(
   //   postSource,
   //   commentSource,
+  //
+  //   // Selector function to massage/concat response data
   //   function(postRes, commentRes) {
   //     return {
   //       post: postRes.data,
@@ -92,11 +99,15 @@ function AppController($scope, $log, $http, rx, observeOnScope) {
   //   }
   // );
 
+
   // 2. Zip example
-  // Sequential. Post runs before Comment. Requests don't depend on each other's response.
+  // Sequential: Post runs before Comment. Requests don't depend on each other's response.
+
   // var source = rx.Observable.zip(
   //   postSource,
   //   commentSource,
+  //
+  //   // Selector function to massage/concat response data
   //   function(postRes, commentRes) {
   //     return {
   //       post: postRes.data,
@@ -105,36 +116,48 @@ function AppController($scope, $log, $http, rx, observeOnScope) {
   //   }
   // );
 
+
   // 3. And/Then/When example (Pattern and Plan)
-  // Sequential. Post runs before Comment. Requests don't depend on each other's response.
+  // Sequential: Post runs before Comment. Requests don't depend on each other's response.
   // Same as the Zip example.
-  var source = rx.Observable.when(
-    postSource.and(commentSource).thenDo(function(postRes, commentRes) {
-      return {
-        post: postRes.data,
-        comment: commentRes.data
-      };
-    }
-  ));
 
-  // 4. Master-and-detail relationship
-  // Sequential. Comment request depends on the response from the Post request.
-  // var source = postSource
-  //   .flatMap(function(postRes) {
-  //     return rx.Observable.zip(
-  //       rx.Observable.of(postRes),
-  //       getStreamSource('http://jsonplaceholder.typicode.com/comments/' + postRes.data.id),
-  //       function(postRes, commentRes) {
-  //         return {
-  //           post: postRes.data,
-  //           comment: commentRes.data
-  //         };
-  //       }
-  //     );
+  // var source = rx.Observable.when(
+  //   postSource.and(commentSource).thenDo(function(postRes, commentRes) {
+  //     return {
+  //       post: postRes.data,
+  //       comment: commentRes.data
+  //     };
   //   }
-  // );
+  // ));
 
-  $scope.$createObservableFunction('start')
+
+  // 4. Master-detail (Cascading) relationship example
+  // Sequential: Comment request depends on the response from the Post request.
+  // Check browser's network console to see if Post responses precede Comment requests.
+
+  var source = postSource
+    .flatMap(function(postRes) {
+      return rx.Observable.zip(
+        // Pass through the Post response
+        rx.Observable.of(postRes),
+
+        // Set up the Comment request using ID from the Post response
+        getStreamSource('http://jsonplaceholder.typicode.com/comments/' + postRes.data.id),
+
+        // Selector function to massage/concat response data
+        function(postRes, commentRes) {
+          return {
+            post: postRes.data,
+            comment: commentRes.data
+          };
+        }
+      );
+    }
+  );
+
+
+  // Transform DOM events to stream source
+  var subscription = $scope.$createObservableFunction('start')
     .safeApply($scope, function() {
       $scope.restResult = {};
     })
@@ -142,5 +165,9 @@ function AppController($scope, $log, $http, rx, observeOnScope) {
     .safeApply($scope, function(results) {
       $scope.restResult = results;
     })
+    // At this moment, no HTTP request is made until the subscribe function is called
     .subscribe();
+
+  // // Cancellation. No REST HTTP request will be sent.
+  // subscription.dispose();
 }
